@@ -8,18 +8,21 @@
   <link rel="dns-prefetch" href="http://yoursite.com">
   <title>JAVA线程池ThreadPoolExecutor | x.</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="最近打算体系的看下java并发包的源码,前两天把线程池的核心类ThreadPoolExecutor的源码过了一遍,今天做个记录总结。">
+  <meta name="description" content="最近打算体系的看下java并发包的源码,前两天把线程池的核心类ThreadPoolExecutor的源码过了一遍,今天做个记录总结。
+我认为的并发包主要可以分为线程池、线程安全集合、原子操作类、线程通信4个功能模块。其中包括ConcurrentHashMap、CopyOnWriteArrayList、BlockingQueue等属于线程安全集合；AtomicBoolean、AtomicLong等属">
 <meta property="og:type" content="article">
 <meta property="og:title" content="JAVA线程池ThreadPoolExecutor">
 <meta property="og:url" content="http://yoursite.com/2017/03/25/JAVA线程池ThreadPoolExecutor/index.html">
 <meta property="og:site_name" content="x.">
-<meta property="og:description" content="最近打算体系的看下java并发包的源码,前两天把线程池的核心类ThreadPoolExecutor的源码过了一遍,今天做个记录总结。">
-<meta property="og:image" content="https://wooox.github.io/img/2017-03-25/FDAF401D-D63B-46F3-BA35-08D56A1E83FD.png">
-<meta property="og:updated_time" content="2017-03-25T07:41:13.000Z">
+<meta property="og:description" content="最近打算体系的看下java并发包的源码,前两天把线程池的核心类ThreadPoolExecutor的源码过了一遍,今天做个记录总结。
+我认为的并发包主要可以分为线程池、线程安全集合、原子操作类、线程通信4个功能模块。其中包括ConcurrentHashMap、CopyOnWriteArrayList、BlockingQueue等属于线程安全集合；AtomicBoolean、AtomicLong等属">
+<meta property="og:image" content="https://wooox.github.io/img/2017-03-25/AD40110F-9D0A-4ED1-B127-44BA85059985.png">
+<meta property="og:updated_time" content="2017-03-25T08:09:57.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="JAVA线程池ThreadPoolExecutor">
-<meta name="twitter:description" content="最近打算体系的看下java并发包的源码,前两天把线程池的核心类ThreadPoolExecutor的源码过了一遍,今天做个记录总结。">
-<meta name="twitter:image" content="https://wooox.github.io/img/2017-03-25/FDAF401D-D63B-46F3-BA35-08D56A1E83FD.png">
+<meta name="twitter:description" content="最近打算体系的看下java并发包的源码,前两天把线程池的核心类ThreadPoolExecutor的源码过了一遍,今天做个记录总结。
+我认为的并发包主要可以分为线程池、线程安全集合、原子操作类、线程通信4个功能模块。其中包括ConcurrentHashMap、CopyOnWriteArrayList、BlockingQueue等属于线程安全集合；AtomicBoolean、AtomicLong等属">
+<meta name="twitter:image" content="https://wooox.github.io/img/2017-03-25/AD40110F-9D0A-4ED1-B127-44BA85059985.png">
   
     <link rel="alternative" href="/atom.xml" title="x." type="application/atom+xml">
   
@@ -176,7 +179,8 @@
     <div class="article-entry" itemprop="articleBody">
       
         <p>最近打算体系的看下java并发包的源码,前两天把线程池的核心类ThreadPoolExecutor的源码过了一遍,今天做个记录总结。</p>
-<p><img src="https://wooox.github.io/img/2017-03-25/FDAF401D-D63B-46F3-BA35-08D56A1E83FD.png" alt="并发包概览"></p>
+<p>我认为的并发包主要可以分为<strong>线程池</strong>、<strong>线程安全集合</strong>、<strong>原子操作类</strong>、<strong>线程通信</strong>4个功能模块。其中包括ConcurrentHashMap、CopyOnWriteArrayList、BlockingQueue等属于线程安全集合；AtomicBoolean、AtomicLong等属于原子操作类；Exchanger、ReentrantLock、CountDownLatch等属于线程通信；而ThreadPoolExecutor则是实现线程池的核心类,类图如下</p>
+<p><img src="https://wooox.github.io/img/2017-03-25/AD40110F-9D0A-4ED1-B127-44BA85059985.png" alt="类图"></p>
 
       
 
