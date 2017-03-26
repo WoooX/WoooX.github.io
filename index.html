@@ -309,7 +309,7 @@ private int largestPoolSize;
 <p>####关键操作</p>
 <p>线程池作为一个管理线程的容器,关键操作也就是启动关闭了</p>
 <p><strong>启动线程池</strong></p>
-<pre><code>    public void execute(Runnable command) {
+<pre><code>public void execute(Runnable command) {
     if (command == null)
         throw new NullPointerException();
     //A.
