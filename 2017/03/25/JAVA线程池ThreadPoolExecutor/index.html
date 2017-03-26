@@ -17,7 +17,7 @@
 <meta property="og:description" content="最近打算体系的看下java并发包的源码,前两天把线程池的核心类ThreadPoolExecutor的源码过了一遍,今天做个记录总结。
 个人认为的并发包主要可以分为线程池、线程安全集合、原子操作类、线程通信4个功能模块。其中ConcurrentHashMap、CopyOnWriteArrayList、BlockingQueue等属于线程安全集合；AtomicBoolean、AtomicLong等属于">
 <meta property="og:image" content="https://wooox.github.io/img/2017-03-25/CE0618AA-3003-41B8-9847-E33D4F42AA0D.png">
-<meta property="og:updated_time" content="2017-03-26T17:01:19.000Z">
+<meta property="og:updated_time" content="2017-03-26T17:10:41.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="JAVA线程池ThreadPoolExecutor">
 <meta name="twitter:description" content="最近打算体系的看下java并发包的源码,前两天把线程池的核心类ThreadPoolExecutor的源码过了一遍,今天做个记录总结。
@@ -188,14 +188,8 @@
 </blockquote>
 <p>然后在说回线程池,线程池作为一种池化技术其实出现已经很久了。池化主要针对一些比较”重”(我不清楚这里用重合不合理,能看懂就行)的资源进行缓存重复利用,比如连接池、线程池等。下面就看下实现线程池的代码,代码基于JDK1.8。</p>
 <h4 id="构造函数和关键属性"><a href="#构造函数和关键属性" class="headerlink" title="构造函数和关键属性"></a>构造函数和关键属性</h4><p><strong>构造函数</strong>:</p>
-<pre><code>public ThreadPoolExecutor(int corePoolSize,
-                          int maximumPoolSize,
-                          long keepAliveTime,
-                          TimeUnit unit,
-                          BlockingQueue&lt;Runnable&gt; workQueue,
-                          ThreadFactory threadFactory,
-                          RejectedExecutionHandler handler) 
-</code></pre><p>ThreadPoolExecutor一共4个构造函数,但最终都会调用上面这个构造函数,其中:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">public ThreadPoolExecutor(int corePoolSize,</div><div class="line">                              int maximumPoolSize,</div><div class="line">                              long keepAliveTime,</div><div class="line">                              TimeUnit unit,</div><div class="line">                              BlockingQueue&lt;Runnable&gt; workQueue,</div><div class="line">                              ThreadFactory threadFactory,</div><div class="line">                              RejectedExecutionHandler handler)</div></pre></td></tr></table></figure>
+<p>ThreadPoolExecutor一共4个构造函数,但最终都会调用上面这个构造函数,其中:</p>
 <ul>
 <li><em>corePoolSize</em> 这个是用来控制池中工作线程个数的参数</li>
 <li><em>maximumPoolSize</em> 这个也是用来控制工作线程个数参数,表示的是最大线程数</li>
@@ -217,53 +211,17 @@
 </blockquote>
 <p><strong>除了构造函数的几个参数外,还有几个重要的参数</strong></p>
 <ul>
-<li><p><em>ctl</em> 一个控制变量,这个应该是算是整个实现里最重要的一个属性了,包含了线程池的状态信息和线程的数量信息</p>
-<pre><code>private final AtomicInteger ctl = new AtomicInteger(ctlOf(RUNNING, 0));
-
-private static final int COUNT_BITS = Integer.SIZE - 3;
-private static final int CAPACITY   = (1 &lt;&lt; COUNT_BITS) - 1;
-
-private static final int RUNNING    = -1 &lt;&lt; COUNT_BITS;
-private static final int SHUTDOWN   =  0 &lt;&lt; COUNT_BITS;
-private static final int STOP       =  1 &lt;&lt; COUNT_BITS;
-private static final int TIDYING    =  2 &lt;&lt; COUNT_BITS;
-private static final int TERMINATED =  3 &lt;&lt; COUNT_BITS;
-</code></pre></li>
+<li><em>ctl</em> 一个控制变量,这个应该是算是整个实现里最重要的一个属性了,包含了线程池的状态信息和线程的数量信息</li>
 </ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">private final AtomicInteger ctl = new AtomicInteger(ctlOf(RUNNING, 0));</div><div class="line">	</div><div class="line">private static final int COUNT_BITS = Integer.SIZE - 3;</div><div class="line">private static final int CAPACITY   = (1 &lt;&lt; COUNT_BITS) - 1;</div><div class="line">		</div><div class="line">private static final int RUNNING    = -1 &lt;&lt; COUNT_BITS;</div><div class="line">private static final int SHUTDOWN   =  0 &lt;&lt; COUNT_BITS;</div><div class="line">private static final int STOP       =  1 &lt;&lt; COUNT_BITS;</div><div class="line">private static final int TIDYING    =  2 &lt;&lt; COUNT_BITS;</div><div class="line">private static final int TERMINATED =  3 &lt;&lt; COUNT_BITS;</div></pre></td></tr></table></figure>
 <blockquote>
 <p>可以看出线程池的状态有5种——RUNNING, SHUTDOWN, STOP, TIDYING, TERMINATED                   </p>
 <p>RUNNING  : 运行正常,可以正正常接受新任务<br>SHUTDOWN : 不接受新任务,执行已缓存的任务然后关闭线程池<br>STOP     : 不接受新任务,中断已缓存的任务然后关闭线程池<br>TIDYING  : 当任务都结束了(正常执行完/中断完),即SHUTDOWN和STOP状态后面都会到TIDYING状态<br>TERMINATED : 这个是因为提供了terminated()钩子函数,所以只有在执行了这个函数之后才会到TERMINATED状态;不过默认实现TIDYING状态即正常关闭了因为erminated()是个空方法</p>
 <p>需要注意的是状态信息是和线程池的线程个数一起存放在了ctl属性里,其中高3位表示状态信息(5个状态最少需要3位共可表示9种状态);低29位表示工作线程个数,共可表示2^29-1个线程大小。</p>
 <p>而这样实现的好处主要可以节省空间,而且因为数量信息存在低位,ctl的加减运算即为线程数的加减法,可看下面关于ctl操作的代码</p>
 </blockquote>
-<pre><code>//取高3位得到状态信息 c &amp; 0x70000000
-private static int runStateOf(int c)     { return c &amp; ~CAPACITY; } 
-//取低29位得到数量信息 c &amp; 0x07777777
-private static int workerCountOf(int c)  { return c &amp; CAPACITY; }
-//状态信息和数量信息合并存于ctl
-private static int ctlOf(int rs, int wc) { return rs | wc; }
-//数量加1,可以发现只需要ctl+1即可
-private boolean compareAndIncrementWorkerCount(int expect) {
-        return ctl.compareAndSet(expect, expect + 1);
-    }
-//数量减1,同上只需要ctl-1即可
-private boolean compareAndDecrementWorkerCount(int expect) {
-        return ctl.compareAndSet(expect, expect - 1);
-    }
-private void decrementWorkerCount() {
-        do {} while (!compareAndDecrementWorkerCount(ctl.get()));
-    }
-//下面几个是静态方法主要用来判断的
-private static boolean runStateLessThan(int c, int s) {
-        return c &lt; s;
-    }
-private static boolean runStateAtLeast(int c, int s) {
-        return c &gt;= s;
-    }
-private static boolean isRunning(int c) {
-        return c &lt; SHUTDOWN;
-    }  
-</code></pre><ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div></pre></td><td class="code"><pre><div class="line"><span class="comment">//取高3位得到状态信息 c &amp; 0x70000000</span></div><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">int</span> <span class="title">runStateOf</span><span class="params">(<span class="keyword">int</span> c)</span>     </span>&#123; <span class="keyword">return</span> c &amp; ~CAPACITY; &#125; </div><div class="line"><span class="comment">//取低29位得到数量信息 c &amp; 0x07777777</span></div><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">int</span> <span class="title">workerCountOf</span><span class="params">(<span class="keyword">int</span> c)</span>  </span>&#123; <span class="keyword">return</span> c &amp; CAPACITY; &#125;</div><div class="line"><span class="comment">//状态信息和数量信息合并存于ctl</span></div><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">int</span> <span class="title">ctlOf</span><span class="params">(<span class="keyword">int</span> rs, <span class="keyword">int</span> wc)</span> </span>&#123; <span class="keyword">return</span> rs | wc; &#125;</div><div class="line"><span class="comment">//数量加1,可以发现只需要ctl+1即可</span></div><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">boolean</span> <span class="title">compareAndIncrementWorkerCount</span><span class="params">(<span class="keyword">int</span> expect)</span> </span>&#123;</div><div class="line">        	<span class="keyword">return</span> ctl.compareAndSet(expect, expect + <span class="number">1</span>);</div><div class="line">    	&#125;</div><div class="line"><span class="comment">//数量减1,同上只需要ctl-1即可</span></div><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">boolean</span> <span class="title">compareAndDecrementWorkerCount</span><span class="params">(<span class="keyword">int</span> expect)</span> </span>&#123;</div><div class="line">        	<span class="keyword">return</span> ctl.compareAndSet(expect, expect - <span class="number">1</span>);</div><div class="line">    	&#125;</div><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">decrementWorkerCount</span><span class="params">()</span> </span>&#123;</div><div class="line">        	<span class="keyword">do</span> &#123;&#125; <span class="keyword">while</span> (!compareAndDecrementWorkerCount(ctl.get()));</div><div class="line">    	&#125;</div><div class="line"><span class="comment">//下面几个是静态方法主要用来判断的</span></div><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">boolean</span> <span class="title">runStateLessThan</span><span class="params">(<span class="keyword">int</span> c, <span class="keyword">int</span> s)</span> </span>&#123;</div><div class="line">        	<span class="keyword">return</span> c &lt; s;</div><div class="line">    	&#125;</div><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">boolean</span> <span class="title">runStateAtLeast</span><span class="params">(<span class="keyword">int</span> c, <span class="keyword">int</span> s)</span> </span>&#123;</div><div class="line">        	<span class="keyword">return</span> c &gt;= s;</div><div class="line">    	&#125;</div><div class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">boolean</span> <span class="title">isRunning</span><span class="params">(<span class="keyword">int</span> c)</span> </span>&#123;</div><div class="line">        	<span class="keyword">return</span> c &lt; SHUTDOWN;</div><div class="line">    	&#125;</div></pre></td></tr></table></figure>
+<ul>
 <li><em>workQueue</em> 这个是用来存放执行任务的阻塞队列</li>
 </ul>
 <blockquote>
@@ -275,67 +233,12 @@ private static boolean isRunning(int c) {
 <blockquote>
 <p>这个才是和corePoolSize、maximumPoolSize是有关系的,表示的是工作线程的集合。但是实际上真正启动线程的是worker内部类型为Thread的一个参数t,就是ThreadFactory返回的那个线程,而newThread方法传入的参数就是worker本身。所以可以尝试下,如果自定义实现ThreadFactory,然后在返回线程时不使用传入的那个Runnable参数这时线程池是不会正常工作的。代码如下</p>
 </blockquote>
-<pre><code>private final class Worker
-    extends AbstractQueuedSynchronizer
-    implements Runnable
-{
-
-    private static final long serialVersionUID = 6138294804551838833L;
-
-    //这里就是通过工厂返回的线程对象
-    final Thread thread;
-    //这里就是该工作线程第一个执行的任务{注意这里用词:第一个}
-    Runnable firstTask;
-    //一个统计信息
-    volatile long completedTasks;
-
-    Worker(Runnable firstTask) {
-        setState(-1); 
-        this.firstTask = firstTask;
-        //就是在这里调用了工厂生成线程
-        this.thread = getThreadFactory().newThread(this);
-    }
-    //这里就是线程具体执行的地方了,他调用了ThreadPoolExecutor的方法runWorker方法;当然前提是工厂的返回的线程要基于传入的Runnable也就是worker本身来生成线程
-    public void run() {
-        runWorker(this);
-    }
-
-    ...
-}
-</code></pre><ul>
-<li><em>mainLock</em> 这个是内部使用的一个锁<pre><code>private final HashSet&lt;Worker&gt; workers = new HashSet&lt;Worker&gt;();
-private final Condition termination = mainLock.newCondition();
-private int largestPoolSize;
-</code></pre><blockquote>
-<p>需要注意的是上面三个属性的类型,很明显这三个属性是线程不安全的,既然扯到线程不安全就很明显了,对这三个属性的操作是需要同步的。而到观察源码也可以发现锁的使用基本就是在处理这三个参数的时候了,不过有少数几个情况的锁的使用可以拿出来探讨的,后面再说</p>
-</blockquote>
-</li>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div></pre></td><td class="code"><pre><div class="line"><span class="keyword">private</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">Worker</span></span></div><div class="line">        <span class="keyword">extends</span> <span class="title">AbstractQueuedSynchronizer</span></div><div class="line">        <span class="keyword">implements</span> <span class="title">Runnable</span></div><div class="line">    &#123;</div><div class="line">        </div><div class="line">        <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">long</span> serialVersionUID = <span class="number">6138294804551838833L</span>;</div><div class="line"></div><div class="line">        <span class="comment">//这里就是通过工厂返回的线程对象</span></div><div class="line">        <span class="keyword">final</span> Thread thread;</div><div class="line">        <span class="comment">//这里就是该工作线程第一个执行的任务&#123;注意这里用词:第一个&#125;</span></div><div class="line">        Runnable firstTask;</div><div class="line">        <span class="comment">//一个统计信息</span></div><div class="line">        <span class="keyword">volatile</span> <span class="keyword">long</span> completedTasks;</div><div class="line"></div><div class="line">        Worker(Runnable firstTask) &#123;</div><div class="line">            setState(-<span class="number">1</span>); </div><div class="line">            <span class="keyword">this</span>.firstTask = firstTask;</div><div class="line">            <span class="comment">//就是在这里调用了工厂生成线程</span></div><div class="line">            <span class="keyword">this</span>.thread = getThreadFactory().newThread(<span class="keyword">this</span>);</div><div class="line">        &#125;</div><div class="line">		<span class="comment">//这里就是线程具体执行的地方了,他调用了ThreadPoolExecutor的方法runWorker方法;当然前提是工厂的返回的线程要基于传入的Runnable也就是worker本身来生成线程</span></div><div class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">run</span><span class="params">()</span> </span>&#123;</div><div class="line">            runWorker(<span class="keyword">this</span>);</div><div class="line">        &#125;</div><div class="line">        </div><div class="line">        ...</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<ul>
+<li><em>mainLock</em> 这个是内部使用的一个锁</li>
 </ul>
-<h4 id="关键操作"><a href="#关键操作" class="headerlink" title="关键操作"></a>关键操作</h4><p>线程池作为一个管理线程的容器,关键操作也就是启动关闭了</p>
-<p><strong>启动线程池</strong></p>
-<pre><code>public void execute(Runnable command) {
-    if (command == null)
-        throw new NullPointerException();
-    //A.
-    int c = ctl.get();
-    if (workerCountOf(c) &lt; corePoolSize) {
-        if (addWorker(command, true))
-            return;
-        c = ctl.get();
-    }
-    //B.
-    if (isRunning(c) &amp;&amp; workQueue.offer(command)) {
-        int recheck = ctl.get();
-        if (! isRunning(recheck) &amp;&amp; remove(command))
-            reject(command);
-        else if (workerCountOf(recheck) == 0)
-            addWorker(null, false);
-    }
-    //C.
-    else if (!addWorker(command, false))
-        reject(command);
-}
-</code></pre><blockquote>
+<figure class="highlight"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div></pre></td><td class="code"><pre><div class="line">private final HashSet&lt;Worker&gt; workers = new HashSet&lt;Worker&gt;();</div><div class="line">private final Condition termination = mainLock.newCondition();</div><div class="line">private int largestPoolSize;</div><div class="line">```  </div><div class="line">  	</div><div class="line">&gt; 需要注意的是上面三个属性的类型,很明显这三个属性是线程不安全的,既然扯到线程不安全就很明显了,对这三个属性的操作是需要同步的。而到观察源码也可以发现锁的使用基本就是在处理这三个参数的时候了,不过有少数几个情况的锁的使用可以拿出来探讨的,后面再说</div><div class="line"></div><div class="line"></div><div class="line">#### 关键操作</div><div class="line"></div><div class="line">线程池作为一个管理线程的容器,关键操作也就是启动关闭了</div><div class="line"></div><div class="line">**启动线程池**</div><div class="line"></div><div class="line">```    	</div><div class="line">public void execute(Runnable command) &#123;</div><div class="line">        if (command == null)</div><div class="line">            throw new NullPointerException();</div><div class="line">        //A.</div><div class="line">        int c = ctl.get();</div><div class="line">        if (workerCountOf(c) &lt; corePoolSize) &#123;</div><div class="line">            if (addWorker(command, true))</div><div class="line">                return;</div><div class="line">            c = ctl.get();</div><div class="line">        &#125;</div><div class="line">        //B.</div><div class="line">        if (isRunning(c) &amp;&amp; workQueue.offer(command)) &#123;</div><div class="line">            int recheck = ctl.get();</div><div class="line">            if (! isRunning(recheck) &amp;&amp; remove(command))</div><div class="line">                reject(command);</div><div class="line">            else if (workerCountOf(recheck) == 0)</div><div class="line">                addWorker(null, false);</div><div class="line">        &#125;</div><div class="line">        //C.</div><div class="line">        else if (!addWorker(command, false))</div><div class="line">            reject(command);</div><div class="line">    &#125;</div></pre></td></tr></table></figure>
+<blockquote>
 <p>上面是启动线程池的方法(submit也是调用的该方法的),这个方法里主要有三种情况(源码英文注释也有说)</p>
 <p>A : 这个比较好理解，其实就对应着前面①的情况,这个时候时候无论有没有空闲线程都是需要新增工作线程的<br>B : 这个是②的情况,任务队列是可以插入任务的;会发现即使插入成功后还是会在做一次判断,这是因为在并发环境下我们无法预测执行的操作,可能在插入成功后,有个操作把线程池给停了(而且在插入成功后执行了),根据状态的定义处于不处于RUNNING状态的话是不能接受新任务的,所以需要把任务取消掉;又或者插入成功后,工作线程刚好都因为空闲且超出了KeepAlive时间而被关闭了,我们知道任务是不启动新线程的,所以即使插入了任务但是没有活跃的工作线程也无法执行,所以需要添加一个新的工作线程<br>C : 这个是处于②或③的情况。②是因为队列满了不过线程池还没满可以在增加线程;③其实就是队列满了线程池也满了,这个时候是肯定会执行reject的</p>
 </blockquote>
