@@ -173,8 +173,8 @@
       
         <p>最近打算体系的看下java并发包的源码,前两天把线程池的核心类ThreadPoolExecutor的源码过了一遍,今天做个记录总结。</p>
 <p>个人认为的并发包主要可以分为<strong>线程池</strong>、<strong>线程安全集合</strong>、<strong>原子操作类</strong>、<strong>线程通信</strong>4个功能模块。其中ConcurrentHashMap、CopyOnWriteArrayList、BlockingQueue等属于线程安全集合；AtomicBoolean、AtomicLong等属于原子操作类；Exchanger、ReentrantLock、CountDownLatch等属于线程通信。</p>
-<p>而ThreadPoolExecutor则是实现线程池的核心类,类图如下<br><img src="https://wooox.github.io/img/2017-03-25/AD40110F-9D0A-4ED1-B127-44BA85059985.png" style="height:200px"></p>
-<p>注:源码都是基于jdk8</p>
+<p>而本次研究的ThreadPoolExecutor则属于实现线程池的核心类,首先可以先看下线程池的类图如下:</p>
+<p><img src="https://wooox.github.io/img/2017-03-25/CE0618AA-3003-41B8-9847-E33D4F42AA0D.png" style="height:200px"></p>
 
       
 
