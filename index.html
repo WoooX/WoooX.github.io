@@ -238,25 +238,25 @@ private static int workerCountOf(int c)  { return c &amp; CAPACITY; }
 private static int ctlOf(int rs, int wc) { return rs | wc; }
 //数量加1,可以发现只需要ctl+1即可
 private boolean compareAndIncrementWorkerCount(int expect) {
-    return ctl.compareAndSet(expect, expect + 1);
-}
+        return ctl.compareAndSet(expect, expect + 1);
+    }
 //数量减1,同上只需要ctl-1即可
 private boolean compareAndDecrementWorkerCount(int expect) {
-    return ctl.compareAndSet(expect, expect - 1);
-}
+        return ctl.compareAndSet(expect, expect - 1);
+    }
 private void decrementWorkerCount() {
-    do {} while (!compareAndDecrementWorkerCount(ctl.get()));
-}
+        do {} while (!compareAndDecrementWorkerCount(ctl.get()));
+    }
 //下面几个是静态方法主要用来判断的
 private static boolean runStateLessThan(int c, int s) {
-    return c &lt; s;
-}
+        return c &lt; s;
+    }
 private static boolean runStateAtLeast(int c, int s) {
-    return c &gt;= s;
-}
+        return c &gt;= s;
+    }
 private static boolean isRunning(int c) {
-    return c &lt; SHUTDOWN;
-}  
+        return c &lt; SHUTDOWN;
+    }  
 </code></pre><ul>
 <li><em>workQueue</em> 这个是用来存放执行任务的阻塞队列</li>
 </ul>
@@ -269,7 +269,7 @@ private static boolean isRunning(int c) {
 <blockquote>
 <p>这个才是和corePoolSize、maximumPoolSize是有关系的,表示的是工作线程的集合。但是实际上真正启动线程的是worker内部类型为Thread的一个参数t,就是ThreadFactory返回的那个线程,而newThread方法传入的参数就是worker本身。所以可以尝试下,如果自定义实现ThreadFactory,然后在返回线程时不使用传入的那个Runnable参数这时线程池是不会正常工作的。代码如下</p>
 </blockquote>
-<pre><code>    private final class Worker
+<pre><code>private final class Worker
     extends AbstractQueuedSynchronizer
     implements Runnable
 {
