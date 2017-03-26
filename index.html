@@ -222,7 +222,9 @@ private static final int SHUTDOWN   =  0 &lt;&lt; COUNT_BITS;
 private static final int STOP       =  1 &lt;&lt; COUNT_BITS;
 private static final int TIDYING    =  2 &lt;&lt; COUNT_BITS;
 private static final int TERMINATED =  3 &lt;&lt; COUNT_BITS;
-</code></pre><blockquote>
+</code></pre></li>
+</ul>
+<blockquote>
 <p>可以看出线程池的状态有5种——RUNNING, SHUTDOWN, STOP, TIDYING, TERMINATED                   </p>
 <p>RUNNING  : 运行正常,可以正正常接受新任务<br>SHUTDOWN : 不接受新任务,执行已缓存的任务然后关闭线程池<br>STOP     : 不接受新任务,中断已缓存的任务然后关闭线程池<br>TIDYING  : 当任务都结束了(正常执行完/中断完),即SHUTDOWN和STOP状态后面都会到TIDYING状态<br>TERMINATED : 这个是因为提供了terminated()钩子函数,所以只有在执行了这个函数之后才会到TERMINATED状态;不过默认实现TIDYING状态即正常关闭了因为erminated()是个空方法</p>
 <p>需要注意的是状态信息是和线程池的线程个数一起存放在了ctl属性里,其中高3位表示状态信息(5个状态最少需要3位共可表示9种状态);低29位表示工作线程个数,共可表示2^29-1个线程大小。</p>
@@ -255,9 +257,8 @@ private static boolean runStateAtLeast(int c, int s) {
 private static boolean isRunning(int c) {
     return c &lt; SHUTDOWN;
 }  
-</code></pre></li>
-<li><p><em>workQueue</em> 这个是用来存放执行任务的阻塞队列</p>
-</li>
+</code></pre><ul>
+<li><em>workQueue</em> 这个是用来存放执行任务的阻塞队列</li>
 </ul>
 <blockquote>
 <p>其实个人觉得这个参数的命名并不准确,这个应该称为taskQueue会更合适一点;需要注意的是这个任务队列和corePoolSize、maximumPoolSize是没有关系的,这两个参数表示的是工作线程的容量大小,是和下面会说到的works的大小相关的;而队列相关是执行的任务,执行任务本身是不会启动线程的(虽然他的类型是Runnable,但是直接调用Runnable的run是不启动新线程的),这些是在worker启动的线程中被执行的</p>
