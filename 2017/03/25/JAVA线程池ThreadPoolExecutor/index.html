@@ -17,7 +17,7 @@
 <meta property="og:description" content="最近打算体系的看下java并发包的源码,前两天把线程池的核心类ThreadPoolExecutor的源码过了一遍,今天做个记录总结。
 个人认为的并发包主要可以分为线程池、线程安全集合、原子操作类、线程通信4个功能模块。其中ConcurrentHashMap、CopyOnWriteArrayList、BlockingQueue等属于线程安全集合；AtomicBoolean、AtomicLong等属于">
 <meta property="og:image" content="https://wooox.github.io/img/2017-03-25/CE0618AA-3003-41B8-9847-E33D4F42AA0D.png">
-<meta property="og:updated_time" content="2017-03-26T16:54:03.000Z">
+<meta property="og:updated_time" content="2017-03-26T16:57:09.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="JAVA线程池ThreadPoolExecutor">
 <meta name="twitter:description" content="最近打算体系的看下java并发包的源码,前两天把线程池的核心类ThreadPoolExecutor的源码过了一遍,今天做个记录总结。
@@ -187,8 +187,7 @@
 <p>(注:java中的并发/并行编程模型有四种(我所知道的 ~.~):Thread、Executor、ForkJoin模型、Actor模型。具体可以参考这篇文章<a href="http://www.importnew.com/14506.html" target="_blank" rel="external">Java并发的四种风味</a>)</p>
 </blockquote>
 <p>然后在说回线程池,线程池作为一种池化技术其实出现已经很久了。池化主要针对一些比较”重”(我不清楚这里用重合不合理,能看懂就行)的资源进行缓存重复利用,比如连接池、线程池等。下面就看下实现线程池的代码,代码基于JDK1.8。</p>
-<p>####构造函数和关键属性</p>
-<p><strong>构造函数</strong>:</p>
+<h4 id="构造函数和关键属性"><a href="#构造函数和关键属性" class="headerlink" title="构造函数和关键属性"></a>构造函数和关键属性</h4><p><strong>构造函数</strong>:</p>
 <pre><code>public ThreadPoolExecutor(int corePoolSize,
                           int maximumPoolSize,
                           long keepAliveTime,
@@ -313,8 +312,7 @@ private int largestPoolSize;
 <blockquote>
 <p>需要注意的是上面三个属性的类型,很明显这三个属性是线程不安全的,既然扯到线程不安全就很明显了,对这三个属性的操作是需要同步的。而到观察源码也可以发现锁的使用基本就是在处理这三个参数的时候了,不过有少数几个情况的锁的使用可以拿出来探讨的,后面再说</p>
 </blockquote>
-<p>####关键操作</p>
-<p>线程池作为一个管理线程的容器,关键操作也就是启动关闭了</p>
+<h4 id="关键操作"><a href="#关键操作" class="headerlink" title="关键操作"></a>关键操作</h4><p>线程池作为一个管理线程的容器,关键操作也就是启动关闭了</p>
 <p><strong>启动线程池</strong></p>
 <pre><code>public void execute(Runnable command) {
     if (command == null)
