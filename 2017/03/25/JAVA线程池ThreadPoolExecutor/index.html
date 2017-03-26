@@ -17,7 +17,7 @@
 <meta property="og:description" content="最近打算体系的看下java并发包的源码,前两天把线程池的核心类ThreadPoolExecutor的源码过了一遍,今天做个记录总结。
 个人认为的并发包主要可以分为线程池、线程安全集合、原子操作类、线程通信4个功能模块。其中ConcurrentHashMap、CopyOnWriteArrayList、BlockingQueue等属于线程安全集合；AtomicBoolean、AtomicLong等属于">
 <meta property="og:image" content="https://wooox.github.io/img/2017-03-25/CE0618AA-3003-41B8-9847-E33D4F42AA0D.png">
-<meta property="og:updated_time" content="2017-03-26T16:57:09.000Z">
+<meta property="og:updated_time" content="2017-03-26T17:01:19.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="JAVA线程池ThreadPoolExecutor">
 <meta name="twitter:description" content="最近打算体系的看下java并发包的源码,前两天把线程池的核心类ThreadPoolExecutor的源码过了一遍,今天做个记录总结。
@@ -303,15 +303,14 @@ private static boolean isRunning(int c) {
     ...
 }
 </code></pre><ul>
-<li><p><em>mainLock</em> 这个是内部使用的一个锁</p>
-<pre><code>private final HashSet&lt;Worker&gt; workers = new HashSet&lt;Worker&gt;();
+<li><em>mainLock</em> 这个是内部使用的一个锁<pre><code>private final HashSet&lt;Worker&gt; workers = new HashSet&lt;Worker&gt;();
 private final Condition termination = mainLock.newCondition();
 private int largestPoolSize;
-</code></pre></li>
-</ul>
-<blockquote>
+</code></pre><blockquote>
 <p>需要注意的是上面三个属性的类型,很明显这三个属性是线程不安全的,既然扯到线程不安全就很明显了,对这三个属性的操作是需要同步的。而到观察源码也可以发现锁的使用基本就是在处理这三个参数的时候了,不过有少数几个情况的锁的使用可以拿出来探讨的,后面再说</p>
 </blockquote>
+</li>
+</ul>
 <h4 id="关键操作"><a href="#关键操作" class="headerlink" title="关键操作"></a>关键操作</h4><p>线程池作为一个管理线程的容器,关键操作也就是启动关闭了</p>
 <p><strong>启动线程池</strong></p>
 <pre><code>public void execute(Runnable command) {
