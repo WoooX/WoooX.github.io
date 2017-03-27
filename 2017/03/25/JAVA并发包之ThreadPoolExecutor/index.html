@@ -6,20 +6,20 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="http://yoursite.com">
-  <title>JAVA线程池ThreadPoolExecutor | x.</title>
+  <title>JAVA并发包之ThreadPoolExecutor | x.</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="description" content="最近打算体系的看下java并发包的源码,前两天把线程池的核心类ThreadPoolExecutor的源码过了一遍,今天做个记录总结。
 个人认为的并发包主要可以分为线程池、线程安全集合、原子操作类、线程通信4个功能模块。其中ConcurrentHashMap、CopyOnWriteArrayList、BlockingQueue等属于线程安全集合；AtomicBoolean、AtomicLong等属于">
 <meta property="og:type" content="article">
-<meta property="og:title" content="JAVA线程池ThreadPoolExecutor">
-<meta property="og:url" content="http://yoursite.com/2017/03/25/JAVA线程池ThreadPoolExecutor/index.html">
+<meta property="og:title" content="JAVA并发包之ThreadPoolExecutor">
+<meta property="og:url" content="http://yoursite.com/2017/03/25/JAVA并发包之ThreadPoolExecutor/index.html">
 <meta property="og:site_name" content="x.">
 <meta property="og:description" content="最近打算体系的看下java并发包的源码,前两天把线程池的核心类ThreadPoolExecutor的源码过了一遍,今天做个记录总结。
 个人认为的并发包主要可以分为线程池、线程安全集合、原子操作类、线程通信4个功能模块。其中ConcurrentHashMap、CopyOnWriteArrayList、BlockingQueue等属于线程安全集合；AtomicBoolean、AtomicLong等属于">
 <meta property="og:image" content="https://wooox.github.io/img/2017-03-25/CE0618AA-3003-41B8-9847-E33D4F42AA0D.png">
-<meta property="og:updated_time" content="2017-03-27T16:09:01.000Z">
+<meta property="og:updated_time" content="2017-03-27T16:09:40.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="JAVA线程池ThreadPoolExecutor">
+<meta name="twitter:title" content="JAVA并发包之ThreadPoolExecutor">
 <meta name="twitter:description" content="最近打算体系的看下java并发包的源码,前两天把线程池的核心类ThreadPoolExecutor的源码过了一遍,今天做个记录总结。
 个人认为的并发包主要可以分为线程池、线程安全集合、原子操作类、线程通信4个功能模块。其中ConcurrentHashMap、CopyOnWriteArrayList、BlockingQueue等属于线程安全集合；AtomicBoolean、AtomicLong等属于">
 <meta name="twitter:image" content="https://wooox.github.io/img/2017-03-25/CE0618AA-3003-41B8-9847-E33D4F42AA0D.png">
@@ -158,19 +158,19 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            <article id="post-JAVA线程池ThreadPoolExecutor" class="article article-type-post " itemscope itemprop="blogPost">
+            <article id="post-JAVA并发包之ThreadPoolExecutor" class="article article-type-post " itemscope itemprop="blogPost">
   <div class="article-inner">
     
       <header class="article-header">
         
   
     <h1 class="article-title" itemprop="name">
-      JAVA线程池ThreadPoolExecutor
+      JAVA并发包之ThreadPoolExecutor
     </h1>
   
 
         
-        <a href="/2017/03/25/JAVA线程池ThreadPoolExecutor/" class="archive-article-date">
+        <a href="/2017/03/25/JAVA并发包之ThreadPoolExecutor/" class="archive-article-date">
   	<time datetime="2017-03-25T06:49:01.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2017-03-25</time>
 </a>
         
@@ -362,7 +362,7 @@
     <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
     <p>扫一扫，分享到微信</p>
     <div class="wx-qrcode">
-      <img src="http://s.jiathis.com/qrcode.php?url=http://yoursite.com/2017/03/25/JAVA线程池ThreadPoolExecutor/" alt="微信分享二维码">
+      <img src="http://s.jiathis.com/qrcode.php?url=http://yoursite.com/2017/03/25/JAVA并发包之ThreadPoolExecutor/" alt="微信分享二维码">
     </div>
 </div>
 
