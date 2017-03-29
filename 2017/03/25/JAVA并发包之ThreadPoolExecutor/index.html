@@ -9,19 +9,19 @@
   <title>JAVA并发包之ThreadPoolExecutor | x.</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
   <meta name="description" content="最近打算体系的看下java并发包的源码,前两天把线程池的核心类ThreadPoolExecutor的源码过了一遍,今天做个记录总结。
-个人认为的并发包主要可以分为线程池、线程安全集合、原子操作类、线程通信4个功能模块。其中ConcurrentHashMap、CopyOnWriteArrayList、BlockingQueue等属于线程安全集合；AtomicBoolean、AtomicLong等属于">
+个人认为的并发包主要可以分为新的并发编程模型、线程安全集合、原子操作类、线程通信4个部分。其中ConcurrentHashMap、CopyOnWriteArrayList、BlockingQueue等属于线程安全集合；AtomicBoolean、AtomicLong">
 <meta property="og:type" content="article">
 <meta property="og:title" content="JAVA并发包之ThreadPoolExecutor">
 <meta property="og:url" content="http://yoursite.com/2017/03/25/JAVA并发包之ThreadPoolExecutor/index.html">
 <meta property="og:site_name" content="x.">
 <meta property="og:description" content="最近打算体系的看下java并发包的源码,前两天把线程池的核心类ThreadPoolExecutor的源码过了一遍,今天做个记录总结。
-个人认为的并发包主要可以分为线程池、线程安全集合、原子操作类、线程通信4个功能模块。其中ConcurrentHashMap、CopyOnWriteArrayList、BlockingQueue等属于线程安全集合；AtomicBoolean、AtomicLong等属于">
+个人认为的并发包主要可以分为新的并发编程模型、线程安全集合、原子操作类、线程通信4个部分。其中ConcurrentHashMap、CopyOnWriteArrayList、BlockingQueue等属于线程安全集合；AtomicBoolean、AtomicLong">
 <meta property="og:image" content="https://wooox.github.io/img/2017-03-25/CE0618AA-3003-41B8-9847-E33D4F42AA0D.png">
-<meta property="og:updated_time" content="2017-03-27T16:12:19.000Z">
+<meta property="og:updated_time" content="2017-03-29T16:49:41.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="JAVA并发包之ThreadPoolExecutor">
 <meta name="twitter:description" content="最近打算体系的看下java并发包的源码,前两天把线程池的核心类ThreadPoolExecutor的源码过了一遍,今天做个记录总结。
-个人认为的并发包主要可以分为线程池、线程安全集合、原子操作类、线程通信4个功能模块。其中ConcurrentHashMap、CopyOnWriteArrayList、BlockingQueue等属于线程安全集合；AtomicBoolean、AtomicLong等属于">
+个人认为的并发包主要可以分为新的并发编程模型、线程安全集合、原子操作类、线程通信4个部分。其中ConcurrentHashMap、CopyOnWriteArrayList、BlockingQueue等属于线程安全集合；AtomicBoolean、AtomicLong">
 <meta name="twitter:image" content="https://wooox.github.io/img/2017-03-25/CE0618AA-3003-41B8-9847-E33D4F42AA0D.png">
   
     <link rel="alternative" href="/atom.xml" title="x." type="application/atom+xml">
@@ -179,14 +179,13 @@
     <div class="article-entry" itemprop="articleBody">
       
         <p>最近打算体系的看下java并发包的源码,前两天把线程池的核心类ThreadPoolExecutor的源码过了一遍,今天做个记录总结。</p>
-<p>个人认为的并发包主要可以分为<strong>线程池</strong>、<strong>线程安全集合</strong>、<strong>原子操作类</strong>、<strong>线程通信</strong>4个功能模块。其中ConcurrentHashMap、CopyOnWriteArrayList、BlockingQueue等属于线程安全集合；AtomicBoolean、AtomicLong等属于原子操作类；Exchanger、ReentrantLock、CountDownLatch等属于线程通信。</p>
-<p>而本次研究的ThreadPoolExecutor则属于实现线程池的核心类,首先可以先看下线程池的类图如下:</p>
+<p>个人认为的并发包主要可以分为<strong>新的并发编程模型</strong>、<strong>线程安全集合</strong>、<strong>原子操作类</strong>、<strong>线程通信</strong>4个部分。其中ConcurrentHashMap、CopyOnWriteArrayList、BlockingQueue等属于线程安全集合；AtomicBoolean、AtomicLong等属于原子操作类；Exchanger、ReentrantLock、CountDownLatch等属于线程通信;而Executor、ExecutorService以及本次要说的ThreadPoolExecutor等则属于新的并发编程模型</p>
 <p><img src="https://wooox.github.io/img/2017-03-25/CE0618AA-3003-41B8-9847-E33D4F42AA0D.png" style="height:200px"></p>
-<p>其中真正和线程池相关的是从ThreadPoolExecutor及其相关的子类们(其实也就一个ScheduledThreadPoolExecutor ~.~)。而像Executor、ExecutorService这些接口其实和线程池没什么关系,他们只是重新定义了一种并发编程模型,可以对比的是之前的Thread。不过这个重新定义的模型功能会比Runnable来得丰富,比如ExecutorService可以获取执行结果(也就是线程执行结果,Runnable是无法获取执行结果的)、ScheduleExecutorService可以定时执行任务等(以前的方式需要通过Timer来实现)。而线程池应该算是这个执行模型中引入的一个非常重要的功能,由ThreadPoolExecutor提供了基本的实现,我们也可以通过继承ThreadPoolExecutor来实现自定义的线程池,实际上ThreadPoolExecutor也提供了很多hook函数来让我们自定义,这个后面再说。</p>
+<p>整个并发编程模型的类图大致如上图所示(当然还需要包括一堆的Future)。这种新的并发编程模型拓展了Thread的并发编程方式,不仅提供了和Thread.start()启动线程一致的功能(execute),还增加了控制线程执行、获取执行结果、定时任务和线程池等实用功能(可以回顾下在以前这些功能需要怎么实现:获取线程执行结果一般我们会使用共享变量的方式将运行结果赋值给共享变量;定时任务我一般需要T通过Timer实现…)。而线程池则是并发包中引入的一个重要功能,由ThreadPoolExecutor提供了基本的实现,我们也可以通过继承ThreadPoolExecutor来实现自定义的线程池,实际上ThreadPoolExecutor也提供了很多hook函数来让我们自定义。</p>
 <blockquote>
 <p>注:java中的并发/并行编程模型有四种(我所知道的 ~.~):Thread、Executor、ForkJoin模型、Actor模型。具体可以参考这篇文章<a href="http://www.importnew.com/14506.html" target="_blank" rel="external">Java并发的四种风味</a> </p>
 </blockquote>
-<p>然后在说回线程池,线程池作为一种池化技术其实出现已经很久了。池化主要针对一些比较”重”(我不清楚这里用重合不合理,能看懂就行)的资源进行缓存重复利用,比如连接池、线程池等。下面就看下实现线程池的代码,代码基于JDK1.8。    </p>
+<p>然后在说回线程池,线程池作为一种池化技术其实出现已经很久了。池化主要针对一些比较”重”(我不清楚这里用重合不合理,能看懂就行)的资源进行缓存重复利用,这种资源一般在创建或销毁都会有比较大的开销,比如连接池、线程池等。下面就看下实现线程池的代码,代码基于JDK1.8。    </p>
 <h4 id="构造函数和关键属性"><a href="#构造函数和关键属性" class="headerlink" title="构造函数和关键属性"></a>构造函数和关键属性</h4><p><strong>构造函数</strong>:</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line"><span class="function"><span class="keyword">public</span> <span class="title">ThreadPoolExecutor</span><span class="params">(<span class="keyword">int</span> corePoolSize,</span></span></div><div class="line">                              <span class="keyword">int</span> maximumPoolSize,</div><div class="line">                              <span class="keyword">long</span> keepAliveTime,</div><div class="line">                              TimeUnit unit,</div><div class="line">                              BlockingQueue&lt;Runnable&gt; workQueue,</div><div class="line">                              ThreadFactory threadFactory,</div><div class="line">                              RejectedExecutionHandler handler)</div></pre></td></tr></table></figure>
 <p>ThreadPoolExecutor一共4个构造函数,但最终都会调用上面这个构造函数,其中:</p>
@@ -308,6 +307,10 @@
         		<li class="article-tag-list-item">
         			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">并发包</a>
         		</li>
+      		 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color4">线程池</a>
+        		</li>
       		
 		</ul>
 	</div>
@@ -374,6 +377,20 @@
 </article>
 
   
+<nav id="article-nav">
+  
+    <a href="/2017/03/28/JAVA并发包之Future/" id="article-nav-newer" class="article-nav-link-wrap">
+      <i class="icon-circle-left"></i>
+      <div class="article-nav-title">
+        
+          JAVA并发包之Future
+        
+      </div>
+    </a>
+  
+  
+</nav>
+
 
 
 
@@ -477,6 +494,10 @@
              
               <li class="article-tag-list-item">
                 <a href="javascript:void(0)" class="js-tag color4">并发包</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color4">线程池</a>
               </li>
             
             <div class="clearfix"></div>
