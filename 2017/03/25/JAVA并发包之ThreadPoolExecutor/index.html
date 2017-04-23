@@ -20,16 +20,16 @@
 首先说下并发包，所谓并发包指的就是java.util.concurrent。下面是通过IDEA截出来的这个包下部分截图。
 
 可以看到包括了大量的类和接口以及两个子包–atomic和lock，不过个人觉得jdk中这样的组织方式并不是很好理解，太多的类被集中放在了java.util.concurrent包下了，所以就按照个人的理解对并发包">
-<meta property="og:image" content="https://wooox.github.io/img/2017-03-25/66F5A563-C1C1-4043-866A-8AE7CAF8D797.png">
-<meta property="og:image" content="https://wooox.github.io/img/2017-03-25/CE0618AA-3003-41B8-9847-E33D4F42AA0D.png">
-<meta property="og:updated_time" content="2017-04-23T10:43:35.000Z">
+<meta property="og:image" content="https://wooox.github.io/img/2017/3/25/66F5A563-C1C1-4043-866A-8AE7CAF8D797.png">
+<meta property="og:image" content="https://wooox.github.io/img/2017/03/25/CE0618AA-3003-41B8-9847-E33D4F42AA0D.png">
+<meta property="og:updated_time" content="2017-04-23T17:23:01.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="JAVA并发包之ThreadPoolExecutor">
 <meta name="twitter:description" content="之前把java并发包中一些类的源码看了一遍，趁着有时间做下笔记
 首先说下并发包，所谓并发包指的就是java.util.concurrent。下面是通过IDEA截出来的这个包下部分截图。
 
 可以看到包括了大量的类和接口以及两个子包–atomic和lock，不过个人觉得jdk中这样的组织方式并不是很好理解，太多的类被集中放在了java.util.concurrent包下了，所以就按照个人的理解对并发包">
-<meta name="twitter:image" content="https://wooox.github.io/img/2017-03-25/66F5A563-C1C1-4043-866A-8AE7CAF8D797.png">
+<meta name="twitter:image" content="https://wooox.github.io/img/2017/3/25/66F5A563-C1C1-4043-866A-8AE7CAF8D797.png">
   
     <link rel="alternative" href="/atom.xml" title="x." type="application/atom+xml">
   
@@ -171,7 +171,7 @@
       
         <p>之前把java并发包中一些类的源码看了一遍，趁着有时间做下笔记</p>
 <p>首先说下并发包，所谓并发包指的就是java.util.concurrent。下面是通过IDEA截出来的这个包下部分截图。</p>
-<p><img src="https://wooox.github.io/img/2017-03-25/66F5A563-C1C1-4043-866A-8AE7CAF8D797.png" style="height:200px"></p>
+<p><img src="https://wooox.github.io/img/2017/3/25/66F5A563-C1C1-4043-866A-8AE7CAF8D797.png" style="height:200px"></p>
 <p>可以看到包括了大量的类和接口以及两个子包–atomic和lock，不过个人觉得jdk中这样的组织方式并不是很好理解，太多的类被集中放在了java.util.concurrent包下了，所以就按照个人的理解对并发包下的类和接口重新做了分类。经过组织觉得并发包下的内容可以分为下面四方面内容:</p>
 <ol>
 <li><strong>线程安全集合</strong>，主要包括了ConcurrentHashMap、CopyOnWriteArrayList、BlockingQueue等，这些都被放在了java.util.concurrent包下、</li>
@@ -182,7 +182,7 @@
 <p>当然每个人组织知识的方式的不一样所以上面这个分类纯属于个人理解并不表示一定正确，有不同看法的欢迎拍砖</p>
 <a id="more"></a>
 <p>说回ThreadPoolExecutor来，下面是通过IDEA得到的ThreadPoolExecutor的类图</p>
-<p><img src="https://wooox.github.io/img/2017-03-25/CE0618AA-3003-41B8-9847-E33D4F42AA0D.png" style="height:200px"></p>
+<p><img src="https://wooox.github.io/img/2017/03/25/CE0618AA-3003-41B8-9847-E33D4F42AA0D.png" style="height:200px"></p>
 <p>这个类图属于上面所说的异步执行框架的一部分。看过一些文章则把这个归类成了线程池，但是个人觉得这种说法并不是很正确，实际上在ThreadPoolExecutor之上的各个类或接口都没有定义任何跟线程池相关的方法或属性，真正实现了线程池功能的是ThreadPoolExecutor以及他的子类们，所以这里关系是Executor定义了一种执行器接口，而ThreadPoolExecutor则仅是作为以线程池方式的一种实现，当然在并发包中也就线程池这么一种实现，不过如果就因为这样就把这个类图归为线程池还是觉得不是很合适的。然后这个类体系和以Future为父接口的类体系一起组成了一种新的异步编程的方式（不过Executor的源码注释里也说了Executor完全可以不用异步的方式，但是如果不用异步的方式其实也就没什么意义了，所以就不去考虑那种情况了）。至于为什么要重新这么一种新的方式，在Executor的源码注释也说的很清楚了:</p>
 <blockquote>
 <p>An object that executes submitted {@link Runnable} tasks. This interface provides a way of decoupling task submission from the mechanics of how each task will be run, including details of thread use, scheduling, etc</p>

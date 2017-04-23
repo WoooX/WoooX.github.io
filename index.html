@@ -157,7 +157,7 @@
       
         <p>之前把java并发包中一些类的源码看了一遍，趁着有时间做下笔记</p>
 <p>首先说下并发包，所谓并发包指的就是java.util.concurrent。下面是通过IDEA截出来的这个包下部分截图。</p>
-<p><img src="https://wooox.github.io/img/2017-03-25/66F5A563-C1C1-4043-866A-8AE7CAF8D797.png" style="height:200px"></img></p>
+<p><img src="https://wooox.github.io/img/2017/3/25/66F5A563-C1C1-4043-866A-8AE7CAF8D797.png" style="height:200px"></img></p>
 <p>可以看到包括了大量的类和接口以及两个子包–atomic和lock，不过个人觉得jdk中这样的组织方式并不是很好理解，太多的类被集中放在了java.util.concurrent包下了，所以就按照个人的理解对并发包下的类和接口重新做了分类。经过组织觉得并发包下的内容可以分为下面四方面内容:</p>
 <ol>
 <li><strong>线程安全集合</strong>，主要包括了ConcurrentHashMap、CopyOnWriteArrayList、BlockingQueue等，这些都被放在了java.util.concurrent包下、</li>
