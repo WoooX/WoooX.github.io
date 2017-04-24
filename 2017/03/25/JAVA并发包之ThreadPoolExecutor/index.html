@@ -22,7 +22,7 @@
 可以看到包括了大量的类和接口以及两个子包–atomic和lock，不过个人觉得jdk中这样的组织方式并不是很好理解，太多的类被集中放在了java.util.concurrent包下了，所以就按照个人的理解对并发包">
 <meta property="og:image" content="https://wooox.github.io/img/2017/3/25/66F5A563-C1C1-4043-866A-8AE7CAF8D797.png">
 <meta property="og:image" content="https://wooox.github.io/img/2017/03/25/CE0618AA-3003-41B8-9847-E33D4F42AA0D.png">
-<meta property="og:updated_time" content="2017-04-23T17:23:01.000Z">
+<meta property="og:updated_time" content="2017-04-24T16:17:16.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="JAVA并发包之ThreadPoolExecutor">
 <meta name="twitter:description" content="之前把java并发包中一些类的源码看了一遍，趁着有时间做下笔记
@@ -284,7 +284,7 @@
 <blockquote>
 <p>这个方法的核心逻辑又是个循环，循环内第一个判断的逻辑主要是当线程池当前是不是SHUTDOWN、RUNNING，因为只有两种状态可以继续执行已有的任务，不过如果任务队列如果已经空了这两种状态下执行的逻辑不一样，RUNNING会继续往下执行，SHUTDOWN会返回因为SHUTDOWN没有任务之后就是要关闭线程池了。接下去的一个timed就是用来表征这个时候是否需要进行存活判断，有两种情况：默认corePoolSize数量以下的线程时不会停止的，除非设置了allowCoreThreadTimeOut=ture；还有就是如果超过了corePoolSize数量的话超出的部分就需要进行存活性判断了。接下来就是判断是否退出工作线程的判断，当超出最大工作线程个数或已经等待时间超过规定的时间且当前工作线程个数大于1或已经没有任务的时候会退出工作线程。否则就继续往下执行，下面一个是判断是否超时的逻辑。利用了阻塞队列的poll方法，超时时间就是在构造函数时传入的keepAliveTime参数，正常情况是得到待执行的任务然后返回。</p>
 </blockquote>
-<h4 id="Executors"><a href="#Executors" class="headerlink" title="Executors"></a>Executors</h4><p>Executors是并发包中提供的一个工具类，最常用的就是利用的他的静态工厂方法来生成线程池了(各种newXXXXXXX)，因为ThreadPoolExecutor的构造方法参数实在是有点都嘛！不过看过阿里最近出的编程规范的应该也知道他们是不建议使用这些静态工厂方法的，原因那里面也写了这里不再说了。因为这个类的源码没具体去看过所以就不具体说了等看了源码在来更新。</p>
+<h4 id="Executors"><a href="#Executors" class="headerlink" title="Executors"></a>Executors</h4><p>Executors是并发包中提供的一个工具类，最常用的就是利用的他的静态工厂方法来生成线程池了(各种newXXXXXXX)，因为ThreadPoolExecutor的构造方法参数实在是有点都嘛！不过看过阿里最近出的编程规范的应该也知道他们是不建议使用这些静态工厂方法的，原因那里面也写了这里不再说了。因为这个类的源码没具体去看过所以就不具体说了等看了源码在来更新。  </p>
 
       
 
