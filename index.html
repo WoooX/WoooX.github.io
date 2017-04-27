@@ -163,9 +163,9 @@
 <li><strong>线程安全集合</strong>，主要包括了ConcurrentHashMap、CopyOnWriteArrayList、BlockingQueue等，这些都被放在了java.util.concurrent包下、</li>
 <li><strong>原子操作类</strong>，主要包括了AtomicBoolean、AtomicLong等，这些都被放在了java.util.concurrent.atomic包下、</li>
 <li><strong>线程通信</strong>，主要有线程间的数据交换、线程同步如Exchanger、ReentrantLock、CountDownLatch等，这些分别被放在了java.util.concurrent和java.util.concurrent.lock包下</li>
-<li><strong>异步执行框架</strong>，提供了除Thread外一种新的异步执行框架，线程池是这里面提供的核心实现。包括了Executor、Fucture和ThreadPoolExecutor等，这些被放在了java.util.concurrent包下</li>
+<li><strong>异步执行框架</strong>，提供了除Thread外一种新的异步执行框架。不过这部分内容随着jdk版本的不断更新也在一直增加着内容，1.5时的Excutor/Future模型以线程池作为实现，1.7时的fork/join模型，1.8又增加了Completable*的内容。主要的类和接口包括了Executor、Fucture和ThreadPoolExecutor等，这些被放在了java.util.concurrent包下</li>
 </ol>
-<p>当然每个人组织知识的方式的不一样所以上面这个分类纯属于个人理解并不表示一定正确，有不同看法的欢迎拍砖</p>
+<p>当然每个人组织知识的方式的不一样所以以上纯属个人组织知识的方式，如果有更好的方式欢迎交流拍砖</p>
         
           <a class="article-more-a" href="/2017/03/25/JAVA并发包之ThreadPoolExecutor/#more">more >></a>
         
